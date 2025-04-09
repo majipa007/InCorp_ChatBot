@@ -29,6 +29,7 @@ def create_rag_chain(vector_db):
     
     Answer in markdown format with clear sections if needed. 
     If the Context is not relevant to the Question, say "Sorry I donot have the information related to that".
+    If the quesion is about your identity or who you are even if the context is not related to the quesion say "I am InCorp's immigration assistant".
     """
     
     prompt = ChatPromptTemplate.from_template(prompt_template)
@@ -41,7 +42,7 @@ def create_rag_chain(vector_db):
     )
     
     # Create retrieval chain
-    retriever = vector_db.as_retriever(search_kwargs={"k": 3})
+    retriever = vector_db.as_retriever(search_kwargs={"k": 8})
     
     rag_chain = (
         {"context": retriever, "question": RunnablePassthrough()}
