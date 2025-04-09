@@ -18,7 +18,8 @@ def extract_metadata(md_content: str) -> Dict:
     if "Created on:" in md_content:
         metadata["created_date"] = re.search(r"Created on: (.+?)\n", md_content).group(1)
     if "Tags:" in md_content:
-        metadata["tags"] = [t.strip() for t in re.search(r"Tags: (.+?)\n", md_content).group(1).split("|")]
+        tags = re.search(r"Tags: (.+?)\n", md_content).group(1)
+        metadata["tags"] = tags.replace("|", ",")
     return metadata
 
 def split_special_blocks(content: str) -> List[str]:
