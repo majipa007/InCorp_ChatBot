@@ -22,14 +22,17 @@ def load_vector_store():
 def create_rag_chain(vector_db):
     # Define prompt template
     prompt_template = """
-    Answer the question based only on the following context:
-    {context}
-    
-    Question: {question}
-    
-    Answer in markdown format with clear sections if needed. 
-    If the Context is not relevant to the Question, say "Sorry I donot have the information related to that".
-    If the quesion is about your identity or who you are even if the context is not related to the quesion say "I am InCorp's immigration assistant".
+        You are an AI assistant working for InCorp Asia, a provider of business solutions in Asia. You have access to detailed internal documentation about services like immigration, incorporation, tax, and compliance.
+
+        Use the context below to answer the question as best as you can. If the answer can be inferred, explain it clearly. Only say "I don’t know" if the answer is completely unavailable.
+
+        Context:
+        {context}
+
+        ---
+
+        Question: {question}
+        Answer:
     """
     
     prompt = ChatPromptTemplate.from_template(prompt_template)
@@ -37,12 +40,15 @@ def create_rag_chain(vector_db):
     # Initialize LLM (replace with your API key)
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",
-        temperature=0.3,
+        temperature=0.6,
         google_api_key=os.getenv("GOOGLE_API_KEY")
     )
     
     # Create retrieval chain
-    retriever = vector_db.as_retriever(search_kwargs={"k": 8})
+    retriever = vector_db.as_retriever(
+        search_type = "mmr",
+        search_kwargs={"k": 12, "fetch_k": 20}
+    )
     
     rag_chain = (
         {"context": retriever, "question": RunnablePassthrough()}

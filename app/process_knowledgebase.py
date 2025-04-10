@@ -67,24 +67,24 @@ def process_immigration_doc(file_path: str) -> List[Document]:
     
     for doc in header_splits:
         # Special handling for key sections
-        if any(k in doc.page_content for k in ["Eligibility", "Required Documents", "Processing Time"]):
-            sub_blocks = split_special_blocks(doc.page_content)
-            for block in sub_blocks:
-                sub_chunks = text_splitter.split_text(block)
-                for chunk in sub_chunks:
-                    new_doc = Document(
-                        page_content=chunk,
-                        metadata={**doc.metadata, **metadata}
-                    )
-                    final_chunks.append(new_doc)
-        else:
-            chunks = text_splitter.split_text(doc.page_content)
-            for chunk in chunks:
-                new_doc = Document(
-                    page_content=chunk,
-                    metadata={**doc.metadata, **metadata}
-                )
-                final_chunks.append(new_doc)
+        # if any(k in doc.page_content for k in ["Eligibility", "Required Documents", "Processing Time"]):
+        #     sub_blocks = split_special_blocks(doc.page_content)
+        #     for block in sub_blocks:
+        #         sub_chunks = text_splitter.split_text(block)
+        #         for chunk in sub_chunks:
+        #             new_doc = Document(
+        #                 page_content=chunk,
+        #                 metadata={**doc.metadata, **metadata}
+        #             )
+        #             final_chunks.append(new_doc)
+        # else:
+        chunks = text_splitter.split_text(doc.page_content)
+        for chunk in chunks:
+            new_doc = Document(
+                page_content=chunk,
+                metadata={**doc.metadata, **metadata}
+            )
+            final_chunks.append(new_doc)
     
     return final_chunks
 
