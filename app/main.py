@@ -6,6 +6,53 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv  
 from datetime import datetime 
 from lead_capture import LeadInfo, LeadCapture
+import psycopg2
+from psycopg2.extras import Json
+import hashlib
+
+# Database configuration
+DB_CONFIG = {
+    "host": "localhost",
+    "database": "database",
+    "user": "postgres",
+    "password": "postgres",
+    "port": "5432"
+}
+
+def get_lead_id(name: str, email: str) -> str:
+    """
+        Generate sha256 hash as lead ID
+    """
+    return hashlib.sha256(f"{name}{email}".encode()).hexdigest()
+
+def store_lead(lead_info: LeadInfo, chat_history: List[Dict]):
+    """
+        Upsert lead data with chat history
+    """
+    try:
+        lead_id = get_lead_id(lead_info.name, lead_info.email)
+        
+        with psycopg2.connect(**DB_CONFIG) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO chats (id, name, email, phone, chat)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        phone = EXCLUDED.phone,
+                        chat = chats.chat || EXCLUDED.chat,
+                        last_updated = NOW()
+                """, (
+                    lead_id,
+                    lead_info.name,
+                    lead_info.email,
+                    lead_info.phone,
+                    Json(chat_history)
+                ))
+                conn.commit()
+                
+    except Exception as e:
+        print(f"Failed to store lead: {e}")
+        raise
 
 
 @cl.on_chat_start
@@ -31,6 +78,9 @@ async def init_chat():
     
     # Initialize chat history
     cl.user_session.set("history", [])
+
+    # Initialize full history
+    cl.user_session.set("full_history", [])
     
     # Initialize lead capture with the LLM
     cl.user_session.set("lead_capture", LeadCapture(llm))
@@ -43,6 +93,7 @@ async def main(message: cl.Message):
     # Getting the current session objects
     rag_chain = cl.user_session.get("rag_chain")
     history: List[Dict] = cl.user_session.get("history")
+    full_history: List[Dict] = cl.user_session.get("full_history")
     lead_capture: LeadCapture = cl.user_session.get("lead_capture")
     
     # Process message for lead info
@@ -67,9 +118,11 @@ async def main(message: cl.Message):
     if lead_capture.should_request_info():
         content += lead_capture.get_info_request_message()
     
-    # Add confirmation if lead info was captured
-    if info_updated and lead_capture.info_captured:
-        store_lead(lead_capture.lead_info)
+    
+    if lead_capture.info_captured:
+        chat = {"user":message.content, "ai": content}
+        print(chat)
+        store_lead(lead_capture.lead_info, chat)
     
     # Update message
     msg.content = content
@@ -77,17 +130,9 @@ async def main(message: cl.Message):
     
     # Store in the session history
     history.append({"user": message.content, "ai": content})
+    full_history.append({"users": message.content, "ai":content})
+    cl.user_session.set("full_history", full_history)
     cl.user_session.set("history", history[-3:])
     
     # Save updated lead capture
     cl.user_session.set("lead_capture", lead_capture)
-
-def store_lead(lead_info: LeadInfo):
-    """Store lead information"""
-    lead_data = {
-        "name": lead_info.name,
-        "email": lead_info.email,
-        "phone": lead_info.phone,
-        "timestamp": datetime.now().isoformat()
-    }
-    print(f"Lead captured: {lead_data}")
