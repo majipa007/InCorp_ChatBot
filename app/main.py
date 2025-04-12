@@ -25,7 +25,7 @@ def get_lead_id(name: str, email: str) -> str:
     """
     return hashlib.sha256(f"{name}{email}".encode()).hexdigest()
 
-def store_lead(lead_info: LeadInfo, chat_history: List[Dict], chat_id: str):
+def store_lead(lead_info: LeadInfo, chat_history: List[Dict], conversion: bool, chat_id: str):
     """
         Upsert lead data with chat history
     """
@@ -36,12 +36,13 @@ def store_lead(lead_info: LeadInfo, chat_history: List[Dict], chat_id: str):
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO chats (id, name, email, phone, chat)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO chats (id, name, email, phone, conversion, chat)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO UPDATE SET
                         name = EXCLUDED.name,
                         email = EXCLUDED.email,
                         phone = EXCLUDED.phone,
+                        conversion = EXCLUDED.conversion,
                         chat = EXCLUDED.chat,
                         last_updated = NOW()
                 """, (
@@ -49,6 +50,7 @@ def store_lead(lead_info: LeadInfo, chat_history: List[Dict], chat_id: str):
                     lead_info.name,
                     lead_info.email,
                     lead_info.phone,
+                    conversion,
                     Json(chat_history)
                 ))
                 conn.commit()
@@ -133,7 +135,7 @@ async def main(message: cl.Message):
     cl.user_session.set("history", history[-3:])
     
     # if lead_capture.info_captured:
-    store_lead(lead_capture.lead_info, full_history, cl.user_session.get("id"))
+    store_lead(lead_capture.lead_info, full_history,lead_capture.info_captured,  cl.user_session.get("id"))
 
     # Save updated lead capture
     cl.user_session.set("lead_capture", lead_capture)
