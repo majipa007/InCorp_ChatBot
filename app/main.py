@@ -116,14 +116,8 @@ async def main(message: cl.Message):
     
     # Check if we should request lead info
     if lead_capture.should_request_info():
-        content += lead_capture.get_info_request_message()
-    
-    
-    if lead_capture.info_captured:
-        chat = {"user":message.content, "ai": content}
-        print(chat)
-        store_lead(lead_capture.lead_info, chat)
-    
+        content += lead_capture.get_info_request_message() 
+
     # Update message
     msg.content = content
     await msg.update()
@@ -134,5 +128,10 @@ async def main(message: cl.Message):
     cl.user_session.set("full_history", full_history)
     cl.user_session.set("history", history[-3:])
     
+    if lead_capture.info_captured:
+        chat = {"user":message.content, "ai": content}
+        print(chat)
+        store_lead(lead_capture.lead_info, full_history)
+
     # Save updated lead capture
     cl.user_session.set("lead_capture", lead_capture)
