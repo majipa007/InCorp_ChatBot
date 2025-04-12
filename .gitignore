@@ -3,3 +3,4 @@ app/__pycache__/
 .env
 app/chainlit.md
 postgres_data
+.idea/

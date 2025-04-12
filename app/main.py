@@ -25,12 +25,13 @@ def get_lead_id(name: str, email: str) -> str:
     """
     return hashlib.sha256(f"{name}{email}".encode()).hexdigest()
 
-def store_lead(lead_info: LeadInfo, chat_history: List[Dict]):
+def store_lead(lead_info: LeadInfo, chat_history: List[Dict], chat_id: str):
     """
         Upsert lead data with chat history
     """
+    print("chat id: \n\n"+chat_id)
     try:
-        lead_id = get_lead_id(lead_info.name, lead_info.email)
+        # lead_id = get_lead_id(lead_info.name, lead_info.email)
         
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor() as cur:
@@ -38,11 +39,13 @@ def store_lead(lead_info: LeadInfo, chat_history: List[Dict]):
                     INSERT INTO chats (id, name, email, phone, chat)
                     VALUES (%s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        email = EXCLUDED.email,
                         phone = EXCLUDED.phone,
-                        chat = chats.chat || EXCLUDED.chat,
+                        chat = EXCLUDED.chat,
                         last_updated = NOW()
                 """, (
-                    lead_id,
+                    chat_id,
                     lead_info.name,
                     lead_info.email,
                     lead_info.phone,
@@ -60,6 +63,7 @@ async def init_chat():
     """
         Initialization function whenever the chainlit is initialized in any browser session.
     """
+
     # Initialize the same LLM used in RAG pipeline
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",
@@ -128,10 +132,8 @@ async def main(message: cl.Message):
     cl.user_session.set("full_history", full_history)
     cl.user_session.set("history", history[-3:])
     
-    if lead_capture.info_captured:
-        chat = {"user":message.content, "ai": content}
-        print(chat)
-        store_lead(lead_capture.lead_info, full_history)
+    # if lead_capture.info_captured:
+    store_lead(lead_capture.lead_info, full_history, cl.user_session.get("id"))
 
     # Save updated lead capture
     cl.user_session.set("lead_capture", lead_capture)

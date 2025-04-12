@@ -1,10 +1,12 @@
-CREATE TABLE IF NOT EXISTS chats (
-    id VARCHAR PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    email VARCHAR NOT NULL,
-    phone VARCHAR,
-    sentiment NUMERIC,
-    chats JSONB NOT NULL,
-    last_updated TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE chats
+(
+    id varchar PRIMARY KEY,
+    name varchar NULL,
+    email varchar NULL,
+    phone varchar NULL,
+    sentiment numeric NULL,
+    chat jsonb NOT NULL,
+    last_updated timestamptz DEFAULT now(),
+    created_at timestamptz DEFAULT now(),
+    conversion boolean DEFAULT false
 );
