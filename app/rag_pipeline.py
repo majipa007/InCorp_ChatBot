@@ -15,26 +15,34 @@ def load_vector_store():
         persist_directory="../incorp_db",
         embedding_function=embeddings
     )
-    print(f"✅ Loaded vector store with {vector_db._collection.count()} documents")
+    print(f"Loaded vector store with {vector_db._collection.count()} documents")
     return vector_db
 
 # 2. Create RAG Chain
 def create_rag_chain(vector_db):
     # Define prompt template
     prompt_template = """
-        You are an AI assistant working for InCorp Asia, a provider of business solutions in Asia. You have access to detailed internal documentation about services like immigration, incorporation, tax, and compliance.
+        You are an AI assistant for InCorp Asia (business solutions: immigration, incorporation, tax, compliance, etc.).
 
-        Use the context below to answer the question as best as you can. If the answer can be inferred, explain it clearly. Only say "I don’t know" if the answer is completely unavailable.
+        **Decision Tree:**
+        1. If asked about jobs: "We currently don't have job openings at InCorp Asia."
+        2. If user shares personal info: "Thank you for sharing your details!"
+        3. If query is COMPLETELY unrelated (e.g., sports, entertainment): "I'm sorry, I can't assist with this as it's unrelated to our services."
+        4. If query is relevant but context is missing: return "<SERVICE_FALLBACK>"
+        5. Else: Answer based on context
 
-        Context:
+        **Context:**
         {context}
 
-        ---
+        **Question:** {question}
 
-        Question: {question}
-        Answer:
-    """
-    
+        **Answer (EXACTLY ONE):**
+        - Predefined response (rules 1-3)
+        - "<SERVICE_FALLBACK>" (rule 4)
+        - Contextual answer (rule 5)
+
+        **Answer:**
+    """    
     prompt = ChatPromptTemplate.from_template(prompt_template)
     
     # Initialize LLM (replace with your API key)

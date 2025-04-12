@@ -23,7 +23,7 @@ def create_vector_db(documents: List[Document]):
     # 1. Initialize Embeddings
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": 'cuda'},
+        model_kwargs={"device": get_embedding_device()},
         encode_kwargs={"normalize_embeddings": True}
     )
 

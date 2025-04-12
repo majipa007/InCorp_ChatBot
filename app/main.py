@@ -29,7 +29,6 @@ def store_lead(lead_info: LeadInfo, chat_history: List[Dict], conversion: bool, 
     """
         Upsert lead data with chat history
     """
-    print("chat id: \n\n"+chat_id)
     try:
         # lead_id = get_lead_id(lead_info.name, lead_info.email)
         
@@ -58,6 +57,27 @@ def store_lead(lead_info: LeadInfo, chat_history: List[Dict], conversion: bool, 
     except Exception as e:
         print(f"Failed to store lead: {e}")
         raise
+
+async def fall_back(history: List[Dict],question: str, llm):
+    prompt = f"""
+        **Role**: You are the Fallback Specialist for InCorp Asia's chatbot. 
+        The main AI couldn't answer this query about our services.
+
+        **Recent Chat History** (last 3 exchanges):
+        {history}
+
+        **Current Query That Needs Fallback**:
+        "{question}"
+
+        **Your Task**:
+        1. Provide a GENERAL but helpful response on the basis of the prompts provided.
+        2. Never say "according to your documents" or "in the context"
+        3. Just provide a good reply to the query dont respond with something staring with "Okay i understand".
+ 
+        **Answer**:
+    """
+    response = await llm.ainvoke(prompt)
+    return response
 
 
 @cl.on_chat_start
@@ -91,6 +111,9 @@ async def init_chat():
     # Initialize lead capture with the LLM
     cl.user_session.set("lead_capture", LeadCapture(llm))
 
+    cl.user_session.set("llm", llm)
+
+
 @cl.on_message
 async def main(message: cl.Message):
     """
@@ -119,10 +142,17 @@ async def main(message: cl.Message):
     # Get response from RAG chain
     response = await rag_chain.ainvoke(full_query)
     content = response.content
+
+    # Check if we should use fall back llm
+    if "<SERVICE_FALLBACK>" in content:
+        response = await fall_back(chat_history, message.content, cl.user_session.get('llm'))
+        content = response.content
+
     
     # Check if we should request lead info
     if lead_capture.should_request_info():
-        content += lead_capture.get_info_request_message() 
+        content += lead_capture.get_info_request_message()
+
 
     # Update message
     msg.content = content

@@ -77,8 +77,6 @@ class LeadCapture:
         }}
         {context}Message: "{message_content}"
         """
-        response = await self.llm.ainvoke(prompt)
-        print(response.content[7:-3])
         try:
             response = await self.llm.ainvoke(prompt)
             extracted_info = json.loads(response.content[7:-3])
