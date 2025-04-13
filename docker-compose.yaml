@@ -12,3 +12,31 @@ services:
       - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+#     networks:
+#       - incorp-net
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#
+#   chatbot:
+#     image: incorp:latest
+#     container_name: chatbot
+#     volumes:
+#       - ./:/working_dir  # Mount current directory for development
+#     working_dir: /working_dir
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     networks:
+#       - incorp-net 
+#     command: >
+#       sh -c "chainlit run app/main.py --port 8000 --host 0.0.0.0"
+#
+# networks:
+#     incorp-net:
+#       driver: bridge
+

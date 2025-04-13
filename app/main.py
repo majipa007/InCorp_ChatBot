@@ -63,9 +63,6 @@ async def fall_back(history: List[Dict],question: str, llm):
         **Role**: You are the Fallback Specialist for InCorp Asia's chatbot. 
         The main AI couldn't answer this query about our services.
 
-        **Recent Chat History** (last 3 exchanges):
-        {history}
-
         **Current Query That Needs Fallback**:
         "{question}"
 
@@ -74,6 +71,8 @@ async def fall_back(history: List[Dict],question: str, llm):
         2. Never say "according to your documents" or "in the context"
         3. Just provide a good reply to the query dont respond with something staring with "Okay i understand".
  
+        `Note: we donot have the service of connecting to specialists of the company so dont mention that`
+
         **Answer**:
     """
     response = await llm.ainvoke(prompt)

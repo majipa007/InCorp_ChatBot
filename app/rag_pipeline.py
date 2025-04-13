@@ -27,7 +27,7 @@ def create_rag_chain(vector_db):
         **Decision Tree:**
         1. If asked about jobs: "We currently don't have job openings at InCorp Asia."
         2. If user shares personal info: "Thank you for sharing your details!"
-        3. If query is COMPLETELY unrelated (e.g., sports, entertainment): "I'm sorry, I can't assist with this as it's unrelated to our services."
+        3. If query is COMPLETELY unrelated to the company and context (for example travel(but answer for visas), contacting, etc): "I'm sorry, I can't assist with this as it's unrelated to our services."
         4. If query is relevant but context is missing: return "<SERVICE_FALLBACK>"
         5. Else: Answer based on context
 
@@ -40,6 +40,8 @@ def create_rag_chain(vector_db):
         - Predefined response (rules 1-3)
         - "<SERVICE_FALLBACK>" (rule 4)
         - Contextual answer (rule 5)
+        
+        `Note: we donot have the service of connecting to specialists of the company so dont mention that`
 
         **Answer:**
     """    
