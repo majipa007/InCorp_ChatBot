@@ -12,6 +12,31 @@ services:
       - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+
+
+    ollama:
+    image: ollama/ollama 
+    container_name: llm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama  
+    environment:
+      #- OLLAMA_CPU_THREADS=4
+      #- OLLAMA_NO_MULMAT=1
+      - OLLAMA_GPU_LAYERS=20         # Optimal for 4GB VRAM
+      - OLLAMA_MAX_VRAM=3000M        # Leave 300MB buffer
+      - OLLAMA_KEEP_ALIVE=3m         # Keep model warm
+      - OLLAMA_DEBUG=1 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia  # NVIDIA GPU
+              count: 1
+              capabilities: [gpu]
+
+
 #     networks:
 #       - incorp-net
 #     healthcheck:

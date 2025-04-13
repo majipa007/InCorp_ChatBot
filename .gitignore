@@ -5,3 +5,4 @@ chainlit.md
 postgres_data
 .idea/
 .chainlit
+ollama_data
