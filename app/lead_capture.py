@@ -79,7 +79,8 @@ class LeadCapture:
         """
         try:
             response = await self.llm.ainvoke(prompt)
-            extracted_info = json.loads(response.content[7:-3])
+            print(response[7:-4])
+            extracted_info = json.loads(response[7:-4])#.content[7:-3])
             
             updated = False
             for field in ["name", "email", "phone"]:

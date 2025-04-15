@@ -1,4 +1,5 @@
 from langchain_community.vectorstores import Chroma
+from langchain_community.llms import Ollama
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -36,28 +37,37 @@ def create_rag_chain(vector_db):
 
         **Question:** {question}
 
-        **Answer (EXACTLY ONE):**
-        - Predefined response (rules 1-3)
-        - "<SERVICE_FALLBACK>" (rule 4)
-        - Contextual answer (rule 5)
-        
-        `Note: we donot have the service of connecting to specialists of the company so dont mention that`
-
         **Answer:**
-    """    
+"""
+     #     **Answer (EXACTLY ONE):**
+    #     - Predefined response (rules 1-3)
+    #     - "<SERVICE_FALLBACK>" (rule 4)
+    #     - Contextual answer (rule 5)
+    #
+    #     `Note: we donot have the service of connecting to specialists of the company so dont mention that`
+    #
+    #     **Answer:**
+    # """    
     prompt = ChatPromptTemplate.from_template(prompt_template)
     
     # Initialize LLM (replace with your API key)
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-2.0-flash",
+    #     temperature=0.6,
+    #     google_api_key=os.getenv("GOOGLE_API_KEY")
+    # )
+    # REPLACE Gemini with Ollama (pointing to your Docker service)
+    llm = Ollama(
+        model="llama3.1",
+        base_url="http://localhost:11434",  # Your Ollama Docker endpoint
         temperature=0.6,
-        google_api_key=os.getenv("GOOGLE_API_KEY")
+        # num_gpu=20  # Adjust based on your GPU capacity
     )
     
     # Create retrieval chain
     retriever = vector_db.as_retriever(
         search_type = "mmr",
-        search_kwargs={"k": 12, "fetch_k": 20}
+        search_kwargs={"k": 8, "fetch_k": 20}
     )
     
     rag_chain = (

@@ -85,13 +85,19 @@ async def init_chat():
         Initialization function whenever the chainlit is initialized in any browser session.
     """
 
-    # Initialize the same LLM used in RAG pipeline
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
-        temperature=0.6,
-        google_api_key=os.getenv("GOOGLE_API_KEY")
-    )
-    
+    # # Initialize the same LLM used in RAG pipeline
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-2.0-flash",
+    #     temperature=0.6,
+    #     google_api_key=os.getenv("GOOGLE_API_KEY")
+    # )
+    # llm = Ollama(
+    #     model="qwen2.5",
+    #     base_url="http://localhost:11434",  # Your Ollama Docker endpoint
+    #     temperature=0.6,
+    #     # num_gpu=20  # Adjust based on your GPU capacity
+    # )
+
     # Send welcome message
     await cl.Message(
         content="Hi! I'm InCorp's immigration assistant. Ask me about visas, PR, or work passes.",
@@ -108,9 +114,9 @@ async def init_chat():
     cl.user_session.set("full_history", [])
     
     # Initialize lead capture with the LLM
-    cl.user_session.set("lead_capture", LeadCapture(llm))
+    # cl.user_session.set("lead_capture", LeadCapture(llm))
 
-    cl.user_session.set("llm", llm)
+    # cl.user_session.set("llm", llm)
 
 
 @cl.on_message
@@ -122,17 +128,17 @@ async def main(message: cl.Message):
     rag_chain = cl.user_session.get("rag_chain")
     history: List[Dict] = cl.user_session.get("history")
     full_history: List[Dict] = cl.user_session.get("full_history")
-    lead_capture: LeadCapture = cl.user_session.get("lead_capture")
-    
-    # Process message for lead info
-    info_updated = await lead_capture.extract_info_from_message(message.content, history)
-    
+    # lead_capture: LeadCapture = cl.user_session.get("lead_capture")
+    #
+    # # Process message for lead info
+    # info_updated = await lead_capture.extract_info_from_message(message.content, history)
+    #
     # Show typing indicator
     msg = cl.Message(content="")
     await msg.send()
     
     # Increment question counter
-    lead_capture.increment_question()
+    # lead_capture.increment_question()
     
     # Format conversation history for context
     chat_history = "\n".join([f"User: {h['user']}\nAI: {h['ai']}" for h in history])
@@ -143,14 +149,14 @@ async def main(message: cl.Message):
     content = response.content
 
     # Check if we should use fall back llm
-    if "<SERVICE_FALLBACK>" in content:
-        response = await fall_back(chat_history, message.content, cl.user_session.get('llm'))
-        content = response.content
+    # if "<SERVICE_FALLBACK>" in content:
+    #     response = await fall_back(chat_history, message.content, cl.user_session.get('llm'))
+    #     content = response.content
 
     
     # Check if we should request lead info
-    if lead_capture.should_request_info():
-        content += lead_capture.get_info_request_message()
+    # if lead_capture.should_request_info():
+    #     content += lead_capture.get_info_request_message()
 
 
     # Update message
@@ -161,7 +167,7 @@ async def main(message: cl.Message):
     history.append({"user": message.content, "ai": content})
     full_history.append({"users": message.content, "ai":content})
     cl.user_session.set("full_history", full_history)
-    cl.user_session.set("history", history[-3:])
+    cl.user_session.set("history", history[-2:])
     
     # if lead_capture.info_captured:
     store_lead(lead_capture.lead_info, full_history,lead_capture.info_captured,  cl.user_session.get("id"))
