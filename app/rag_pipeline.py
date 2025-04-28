@@ -58,16 +58,16 @@ def create_rag_chain(vector_db):
     # )
     # REPLACE Gemini with Ollama (pointing to your Docker service)
     llm = Ollama(
-        model="llama3.1",
+        model="gemma3",
         base_url="http://localhost:11434",  # Your Ollama Docker endpoint
         temperature=0.6,
-        # num_gpu=20  # Adjust based on your GPU capacity
+        num_gpu=20  # Adjust based on your GPU capacity
     )
     
     # Create retrieval chain
     retriever = vector_db.as_retriever(
         search_type = "mmr",
-        search_kwargs={"k": 8, "fetch_k": 20}
+        search_kwargs={"k": 6, "fetch_k": 20}
     )
     
     rag_chain = (

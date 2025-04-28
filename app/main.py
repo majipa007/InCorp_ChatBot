@@ -92,7 +92,7 @@ async def init_chat():
     #     google_api_key=os.getenv("GOOGLE_API_KEY")
     # )
     # llm = Ollama(
-    #     model="qwen2.5",
+    #     model="gemma3",
     #     base_url="http://localhost:11434",  # Your Ollama Docker endpoint
     #     temperature=0.6,
     #     # num_gpu=20  # Adjust based on your GPU capacity
@@ -146,7 +146,7 @@ async def main(message: cl.Message):
     
     # Get response from RAG chain
     response = await rag_chain.ainvoke(full_query)
-    content = response.content
+    content = response#.content
 
     # Check if we should use fall back llm
     # if "<SERVICE_FALLBACK>" in content:
@@ -170,7 +170,7 @@ async def main(message: cl.Message):
     cl.user_session.set("history", history[-2:])
     
     # if lead_capture.info_captured:
-    store_lead(lead_capture.lead_info, full_history,lead_capture.info_captured,  cl.user_session.get("id"))
+    #store_lead(lead_capture.lead_info, full_history,lead_capture.info_captured,  cl.user_session.get("id"))
 
     # Save updated lead capture
-    cl.user_session.set("lead_capture", lead_capture)
+    # cl.user_session.set("lead_capture", lead_capture)
